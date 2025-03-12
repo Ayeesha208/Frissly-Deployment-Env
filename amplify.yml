@@ -1,0 +1,37 @@
+version: 1
+applications:
+  - appRoot: .
+    frontend:
+      phases:
+        build:
+          commands:
+            - echo "Build started on `date`"
+
+            # Define log variables
+            - LOG_GROUP="/aws/amplify/$(echo $AWS_BRANCH | tr '/' '-')"
+            - LOG_STREAM="build-log"
+
+            # Check if log group exists, then create it
+            - |
+              if ! aws logs describe-log-groups --log-group-name-prefix "$LOG_GROUP" | grep "$LOG_GROUP"; then
+                aws logs create-log-group --log-group-name "$LOG_GROUP"
+              fi
+
+            # Create log stream
+            - aws logs create-log-stream --log-group-name "$LOG_GROUP" --log-stream-name "$LOG_STREAM"
+
+            # Get sequence token (if any)
+            - SEQUENCE_TOKEN=$(aws logs describe-log-streams --log-group-name "$LOG_GROUP" --log-stream-name "$LOG_STREAM" --query "logStreams[0].uploadSequenceToken" --output text || echo "")
+
+            # Send initial log event
+            - |
+              if [[ "$SEQUENCE_TOKEN" == "None" ]]; then
+                aws logs put-log-events --log-group-name "$LOG_GROUP" --log-stream-name "$LOG_STREAM" --log-events timestamp=$(date +%s000),message="Build started"
+              else
+                aws logs put-log-events --log-group-name "$LOG_GROUP" --log-stream-name "$LOG_STREAM" --log-events timestamp=$(date +%s000),message="Build started" --sequence-token "$SEQUENCE_TOKEN"
+              fi
+
+    artifacts:
+      baseDirectory: build
+      files:
+        - '**/*'
