@@ -1,26 +1,17 @@
 version: 1
-applications:
-  - appRoot: "your-app-folder"  # Replace with your actual app directory
-    frontend:
-      phases:
-        preBuild:
-          commands:
-            - npm install
-        build:
-          commands:
-            - npm run build
-      artifacts:
-        baseDirectory: dist  # Change this to 'build' or the correct output folder of your app
-        files:
-          - "**/*"
-      cache:
-        paths:
-          - node_modules/**/*
-    backend:
-      phases:
-        build:
-          commands:
-            - amplify push --yes
-    logging:
-      cloudWatch:
-        enabled: true
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: build
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+
