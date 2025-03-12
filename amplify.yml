@@ -1,39 +1,26 @@
 version: 1
 applications:
-  - frontend:
+  - appRoot: "your-app-folder"  # Change this to the actual app folder name
+    frontend:
       phases:
         preBuild:
           commands:
-            - echo "Installing dependencies..."
             - npm install
         build:
           commands:
-            - echo "Building the app..."
             - npm run build
       artifacts:
-        baseDirectory: build  # Update this if using a different build output
+        baseDirectory: build
         files:
-          - '**/*'
+          - "**/*"
       cache:
         paths:
           - node_modules/**/*
-      environment:
-        variables:
-          LOG_GROUP_NAME: "/aws/amplify/Frissly-Deployment-Env"
-  - backend:
+    backend:
       phases:
-        preBuild:
-          commands:
-            - echo "Installing backend dependencies..."
-            - npm install
         build:
           commands:
-            - echo "Starting backend setup..."
             - amplify push --yes
-      artifacts:
-        baseDirectory: backend  # Adjust based on your backend framework
-        files:
-          - '**/*'
-      cache:
-        paths:
-          - node_modules/**/*
+    logging:
+      cloudWatch:
+        enabled: true
