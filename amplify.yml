@@ -3,34 +3,21 @@ applications:
   - appRoot: .
     frontend:
       phases:
+        preBuild:
+          commands:
+            - npm install  # Use 'yarn install' if you use Yarn
         build:
           commands:
-            - echo "Build started on `date`"
-            - LOG_GROUP="/aws/amplify/build-logs"
-            - LOG_STREAM="build-log"
-
-            # Ensure AWS CLI is installed
-            - which aws || curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && unzip awscliv2.zip && sudo ./aws/install
-            
-            # Create log group if not exists
-            - |
-              if ! aws logs describe-log-groups --log-group-name-prefix "$LOG_GROUP" | grep "$LOG_GROUP"; then
-                aws logs create-log-group --log-group-name "$LOG_GROUP"
-              fi
-
-            # Create log stream
-            - aws logs create-log-stream --log-group-name "$LOG_GROUP" --log-stream-name "$LOG_STREAM"
-
-            # Send log event
-            - SEQUENCE_TOKEN=$(aws logs describe-log-streams --log-group-name "$LOG_GROUP" --log-stream-name "$LOG_STREAM" --query "logStreams[0].uploadSequenceToken" --output text || echo "")
-            - |
-              if [[ "$SEQUENCE_TOKEN" == "None" ]]; then
-                aws logs put-log-events --log-group-name "$LOG_GROUP" --log-stream-name "$LOG_STREAM" --log-events timestamp=$(date +%s000),message="Build started"
-              else
-                aws logs put-log-events --log-group-name "$LOG_GROUP" --log-stream-name "$LOG_STREAM" --log-events timestamp=$(date +%s000),message="Build started" --sequence-token "$SEQUENCE_TOKEN"
-              fi
-
+            - npm run build  # Change based on your framework (React, Angular, Vue, etc.)
     artifacts:
-      baseDirectory: build
+      baseDirectory: build  # Change to 'dist' if you're using Angular or Vue
       files:
         - '**/*'
+    cache:
+      paths:
+        - node_modules/**/*
+    customHeaders:
+      - pattern: '**/*'
+        headers:
+          - key: 'Cache-Control'
+            value: 'max-age=86400'
