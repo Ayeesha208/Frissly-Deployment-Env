@@ -1,6 +1,6 @@
 version: 1
 applications:
-  - appRoot: "your-app-folder"  # Change this to the actual app folder name
+  - appRoot: "your-app-folder"  # Replace with your actual app directory
     frontend:
       phases:
         preBuild:
@@ -10,7 +10,7 @@ applications:
           commands:
             - npm run build
       artifacts:
-        baseDirectory: build
+        baseDirectory: dist  # Change this to 'build' or the correct output folder of your app
         files:
           - "**/*"
       cache:
