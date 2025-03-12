@@ -1,23 +1,39 @@
 version: 1
 applications:
-  - appRoot: .
-    frontend:
+  - frontend:
       phases:
         preBuild:
           commands:
-            - npm install  # Use 'yarn install' if you use Yarn
+            - echo "Installing dependencies..."
+            - npm install
         build:
           commands:
-            - npm run build  # Change based on your framework (React, Angular, Vue, etc.)
-    artifacts:
-      baseDirectory: build  # Change to 'dist' if you're using Angular or Vue
-      files:
-        - '**/*'
-    cache:
-      paths:
-        - node_modules/**/*
-    customHeaders:
-      - pattern: '**/*'
-        headers:
-          - key: 'Cache-Control'
-            value: 'max-age=86400'
+            - echo "Building the app..."
+            - npm run build
+      artifacts:
+        baseDirectory: build  # Update this if using a different build output
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*
+      environment:
+        variables:
+          LOG_GROUP_NAME: "/aws/amplify/Frissly-Deployment-Env"
+  - backend:
+      phases:
+        preBuild:
+          commands:
+            - echo "Installing backend dependencies..."
+            - npm install
+        build:
+          commands:
+            - echo "Starting backend setup..."
+            - amplify push --yes
+      artifacts:
+        baseDirectory: backend  # Adjust based on your backend framework
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*
