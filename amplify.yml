@@ -10,7 +10,7 @@ applications:
           commands:
             - npm run build
       artifacts:
-        baseDirectory: build  # Change this to 'build' or the correct output folder of your app
+        baseDirectory: dist  # Change this to 'build' or the correct output folder of your app
         files:
           - "**/*"
       cache:
