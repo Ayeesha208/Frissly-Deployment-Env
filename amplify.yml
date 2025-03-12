@@ -5,7 +5,10 @@ applications:
       phases:
         build:
           commands:
-            - echo "Build started on `date`"
+            - echo "Build started on $(date)"
+
+            # Ensure AWS CLI is installed
+            - which aws || curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && unzip awscliv2.zip && sudo ./aws/install
 
             # Define log variables
             - LOG_GROUP="/aws/amplify/$(echo $AWS_BRANCH | tr '/' '-')"
@@ -13,19 +16,24 @@ applications:
 
             # Check if log group exists, then create it
             - |
+              echo "Checking if log group exists..."
               if ! aws logs describe-log-groups --log-group-name-prefix "$LOG_GROUP" | grep "$LOG_GROUP"; then
+                echo "Creating log group: $LOG_GROUP"
                 aws logs create-log-group --log-group-name "$LOG_GROUP"
               fi
 
             # Create log stream
-            - aws logs create-log-stream --log-group-name "$LOG_GROUP" --log-stream-name "$LOG_STREAM"
+            - echo "Creating log stream: $LOG_STREAM"
+            - aws logs create-log-stream --log-group-name "$LOG_GROUP" --log-stream-name "$LOG_STREAM" || echo "Log stream already exists"
 
             # Get sequence token (if any)
+            - echo "Fetching sequence token..."
             - SEQUENCE_TOKEN=$(aws logs describe-log-streams --log-group-name "$LOG_GROUP" --log-stream-name "$LOG_STREAM" --query "logStreams[0].uploadSequenceToken" --output text || echo "")
 
             # Send initial log event
             - |
-              if [[ "$SEQUENCE_TOKEN" == "None" ]]; then
+              echo "Sending logs to CloudWatch..."
+              if [[ "$SEQUENCE_TOKEN" == "None" || -z "$SEQUENCE_TOKEN" ]]; then
                 aws logs put-log-events --log-group-name "$LOG_GROUP" --log-stream-name "$LOG_STREAM" --log-events timestamp=$(date +%s000),message="Build started"
               else
                 aws logs put-log-events --log-group-name "$LOG_GROUP" --log-stream-name "$LOG_STREAM" --log-events timestamp=$(date +%s000),message="Build started" --sequence-token "$SEQUENCE_TOKEN"
